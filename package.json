@@ -1,0 +1,21 @@
+{
+  "name": "analytics.js-integration-crossengage",
+  "description": "The CrossEngage analytics.js integration.",
+  "version": "1.0.0",
+  "main": "lib/index.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+ssh://git@bitbucket.org/crossengage/analytics.js-integration-xng.git"
+  },
+  "author": "tomasz stryjewski <tomasz.stryjewski@project-a.com>",
+  "license": "MIT",
+  "homepage": "https://bitbucket.org/crossengage/analytics.js-integration-xng#readme",
+  "devDependencies": {
+    "duo": "^0.15.2",
+    "duo-babel": "^6.0.0",
+    "eslint": "^1.0.0"
+  }
+}
