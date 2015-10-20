@@ -101,15 +101,6 @@ function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { 'd
 
 var _analyticsJsIntegration = require('analytics.js-integration');
 
-// import assign from 'object-assign';
-// import ads from 'ad-params';
-// import utm from 'utm-params';
-// import { Jar } from 'cookie-jar';
-
-// import globalQ from 'global-queue';
-//
-// const push = globalQ('_xng');
-
 var _analyticsJsIntegration2 = _interopRequireDefault(_analyticsJsIntegration);
 
 function init(analytics) {
@@ -118,58 +109,52 @@ function init(analytics) {
 
 init.Integration = XNG;
 
-var XNG = (0, _analyticsJsIntegration2['default'])('CrossEngage').global('xng').option('apiKey', '').assumesPageview()
-// .readyOnInitialize()
-.tag('<script src="https://crossengage.io/xng.min.js">');
+var XNG = (0, _analyticsJsIntegration2['default'])('CrossEngage').readyOnLoad().global('xng').option('apiKey', '').option('siteID', '').option('adformID', '').tag('<script src="https://test.crossengage.io/xng.min.js">');
 
-// const jarConfig = {
-//   maxAge : 31536000000, // 1y
-//   secure : false,
-//   path   : '/'
-// };
+var mocked = undefined;
 
-XNG.prototype.initialize = function (page) {
-  window.xng.init(undefined.options.apiKey);
+XNG.prototype.initialize = function () {
+  mockXNG(window);
 
-  undefined.load(undefined.ready);
+  window.xng.init(this.options.apiKey, this.options.siteID);
 
-  if (page) {
-    undefined.page(page);
-  }
+  window.xng.adform(this.options.adformID);
+
+  this.load(this.ready);
 };
 
 XNG.prototype.loaded = function () {
-  return window.xng instanceof Object;
+  return window.xng && window.xng.version;
 };
 
 XNG.prototype.page = function (page) {
-  undefined.debug('xng:page', page);
+  this.debug('xng-integration:page', page);
 
-  window.xng.send('track', page.json());
+  return window.xng.page(page.json());
 };
 
 XNG.prototype.identify = function (identify) {
-  undefined.debug('xng:identify', identify);
+  this.debug('xng-integration:identify', identify);
 
-  window.xng.send('identify', identify.json(), function () {
-    return window.xng.safariPush();
+  return window.xng.identify(identify.json(), function () {
+    window.xng.safariPushNotification('web.io.crossengage.spryker');
   });
 };
 
 XNG.prototype.group = function (group) {
-  undefined.debug('xng:group', group);
+  this.debug('xng-integration:group', group);
 
-  window.xng.send('group', group.json());
+  return window.xng.group(group.json());
 };
 
 XNG.prototype.track = function (track) {
-  undefined.debug('xng:track', track);
+  this.debug('xng-integration:track', track);
 
-  window.xng.send('track', track.json());
+  return window.xng.track(track.json());
 };
 
 XNG.prototype.alias = function (alias) {
-  var user = undefined.analytics.user();
+  var user = this.analytics.user();
   var json = alias.json();
 
   json.previousId = json.previousId || json.from || user.id() || user.anonymousId();
@@ -178,103 +163,34 @@ XNG.prototype.alias = function (alias) {
   delete json.from;
   delete json.to;
 
-  undefined.debug('xng:alias', alias, json);
-  window.xng.send('alias', json);
+  this.debug('xng-integration:alias', alias, json);
+  return window.xng.alias(json);
 };
 
-// XNG.prototype.normalize = ( msg ) => {
-//   this.debug( 'normalize %o', msg );
-//
-//   const user  = this.analytics.user();
-//   const query = location.search;
-//   const ctx   = msg.context = msg.context || msg.options || {};
-//
-//   delete msg.options;
-//
-//   msg.writeKey = this.options.apiKey;
-//   ctx.userAgent = navigator.userAgent;
-//
-//   if ( !ctx.library ) {
-//     ctx.library = {
-//       name    : 'analytics.js',
-//       version : this.analytics.VERSION
-//     };
-//   }
-//
-//   if ( query ) {
-//     ctx.campaign = utm( query );
-//   }
-//
-//   this.referrerId( query, ctx );
-//
-//   assign( msg, {
-//     userId      : msg.userId || user.id(),
-//     anonymousId : user.anonymousId(),
-//     messageId   : uuid(),
-//     sentAt      : new Date()
-//   });
-//
-//   this.debug( 'normalized %o', msg );
-//
-//   return msg;
-// };
-//
-// XNG.prototype.cookie = function ( name, val ) {
-//   if ( arguments.length === 1 ) {
-//     return jar.get( name );
-//   }
-//
-//   var href = window.location.href;
-//   var domain = '.' + top( href );
-//
-//   if ( '.' === domain ) {
-//     domain = '';
-//   }
-//
-//   var config = assign( { domain }, jarConfig );
-//
-//   this.debug( 'store domain %s -> %s', href, domain );
-//   this.debug( 'store %s, %s, %o', name, val, config );
-//
-//   jar.set( name, val, config );
-//
-//   if ( jar.get( name ) ) {
-//     return;
-//   }
-//
-//   delete config.domain;
-//
-//   this.debug( 'fallback store %s, %s, %o', name, val, config );
-//
-//   jar.set( name, val, config );
-// };
-//
-// XNG.prototype.referrerId = function ( query, ctx ) {
-//   let stored = this.cookie( 'xng:context.referrer' );
-//   let ad;
-//
-//   if ( stored ) {
-//     stored = JSON.parse(stored);
-//   }
-//
-//   ad = query ?
-//     ads( query ) :
-//     stored;
-//
-//   if ( !ad ) {
-//     return;
-//   }
-//
-//   ctx.referrer = assign( ctx.referrer || {}, ad );
-//
-//   this.cookie( 'xng:context.referrer', JSON.stringify( ad ) );
-// };
-//
-// XNG.prototype.send = ( uri, msg, fn ) => {
-//   this.debug( 'xng:send.init %s %o', uri, msg );
-//
-//   window.xng.send( uri, this.normalize( msg ), fn );
-// };
+function mockXNG(w, xng) {
+  xng = w.xng = w.xng || [];
+
+  if (!xng.version) {
+    if (!mocked) {
+      mocked = true;
+
+      var methods = ['init', 'track', 'page', 'identify', 'group', 'alias', 'pushNotification', 'safariPushNotification', 'adform'];
+
+      var method;
+
+      while (method = methods.shift()) {
+        xng[method] = factory(method);
+      }
+    }
+  }
+
+  function factory(t) {
+    return function () {
+      xng.push(Array.prototype.concat.apply([t], arguments));
+      return xng;
+    };
+  }
+}
 module.exports = exports['default'];
 }, {"analytics.js-integration":2}],
 2: [function(require, module, exports) {
@@ -463,6 +379,8 @@ module.exports = function (val) {
   if (val === undefined) return 'undefined';
   if (val !== val) return 'nan';
   if (val && val.nodeType === 1) return 'element';
+
+  if (typeof Buffer != 'undefined' && Buffer.isBuffer(val)) return 'buffer';
 
   val = val.valueOf ? val.valueOf() : Object.prototype.valueOf.apply(val);
 
