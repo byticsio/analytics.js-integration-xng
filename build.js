@@ -108,15 +108,17 @@ function init(analytics) {
 }
 
 init.Integration = XNG;
+var xngVersion = window.xngUseVersion ? window.xngUseVersion : 'xng';
+var xngLibDomain = window.xngBackendDomain ? window.xngBackendDomain : 'test.crossengage.io';
 
-var XNG = (0, _analyticsJsIntegration2['default'])('CrossEngage').readyOnLoad().global('xng').option('apiKey', '').option('siteID', '').option('adformID', '').tag('<script src="https://test.crossengage.io/xng.min.js">');
+var XNG = (0, _analyticsJsIntegration2['default'])('CrossEngage').readyOnLoad().global('xng').option('apiKey', '').option('siteID', '').option('adformID', '').option('debug', false).tag('<script src="https://' + xngLibDomain + '/xng/' + xngVersion + '.min.js">');
 
 var mocked = undefined;
 
 XNG.prototype.initialize = function () {
   mockXNG(window);
 
-  window.xng.init(this.options.apiKey, this.options.siteID);
+  window.xng.init(this.options.apiKey, this.options.siteID, this.options.debug);
 
   window.xng.adform(this.options.adformID);
 
@@ -378,12 +380,18 @@ module.exports = function (val) {
   if (val !== val) return 'nan';
   if (val && val.nodeType === 1) return 'element';
 
-  if (typeof Buffer != 'undefined' && Buffer.isBuffer(val)) return 'buffer';
+  if (isBuffer(val)) return 'buffer';
 
   val = val.valueOf ? val.valueOf() : Object.prototype.valueOf.apply(val);
 
   return typeof val;
 };
+
+// code borrowed from https://github.com/feross/is-buffer/blob/master/index.js
+function isBuffer(obj) {
+  return !!(obj != null && (obj._isBuffer || // For Safari 5-7 (missing Object.prototype.constructor)
+  obj.constructor && typeof obj.constructor.isBuffer === 'function' && obj.constructor.isBuffer(obj)));
+}
 }, {}],
 4: [function(require, module, exports) {
 
@@ -2214,7 +2222,7 @@ var isString = function isString(val) {
 
 // TODO: Move to a library
 var isArrayLike = function isArrayLike(val) {
-  return val != null && (typeof val !== 'function' && typeof val.length === 'number');
+  return val != null && typeof val !== 'function' && typeof val.length === 'number';
 };
 
 /**
@@ -2746,6 +2754,7 @@ var has = Object.prototype.hasOwnProperty;
 
 function isEmpty(val) {
   if (null == val) return true;
+  if ('boolean' == typeof val) return false;
   if ('number' == typeof val) return 0 === val;
   if (undefined !== val.length) return 0 === val.length;
   for (var key in val) if (has.call(val, key)) return false;
